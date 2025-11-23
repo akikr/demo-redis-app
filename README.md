@@ -58,6 +58,19 @@ This will start the application and the Redis database in docker container using
 
 The project also includes a `compose.yml` to be used by spring-boot docker-compose support to run the application and the Redis service in Docker containers.
 
+### Testing the application
+
+### Run the tests using Maven
+
+To run the tests for the application, you can use the following Maven command:
+
+```shell
+sdk env
+./mvnw clean test
+```
+
+This will execute all the `unit-tests` and `integration-tests` for the application using `test-containers` to spin up a Redis service in a docker container for testing purposes.
+
 ## Conclusion
 
 The `demo-redis-app` project is a great starting point for anyone looking to learn how to build a simple Spring Boot application with Redis as cache-service.
