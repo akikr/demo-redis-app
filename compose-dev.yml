@@ -3,11 +3,13 @@ services:
     image: "redis:8-alpine"
     container_name: redis
     hostname: '${REDIS_HOST}'
+    environment:
+      - "REDIS_PASSWORD=${REDIS_PASSWORD}"
     ports:
       - "${REDIS_PORT}:6379"
     restart: always
     healthcheck:
-      test: [ "CMD-SHELL", "redis-cli ping" ]
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 3
@@ -20,11 +22,14 @@ services:
     ##To build this image:  ./mvnw clean package spring-boot:build-image-no-fork -DskipTests -Dspring-boot.build-image.env.BP_BASE_IMAGE="paketobuildpacks/builder-noble-java-tiny:latest" -Dspring-boot.build-image.env.BP_NATIVE_IMAGE_BUILD_ARGUMENTS="-H:Architecture=linux/amd64"
     image: app/redis-app-sb:v1
     environment:
-      REDIS_HOST: '${REDIS_HOST}'
-      REDIS_PORT: '${REDIS_PORT}'
-      JAVA_TOOL_OPTIONS: '-Xmx300m'
-    command: >
-      --spring.docker.compose.enabled=false --spring.profiles.active=redis
+      - "REDIS_HOST=${REDIS_HOST}"
+      - "REDIS_PORT=${REDIS_PORT}"
+      - "REDIS_PASSWORD=${REDIS_PASSWORD}"
+      - "JAVA_TOOL_OPTIONS=-Xmx300m"
+    command: >-
+      --spring.docker.compose.enabled=false
+      --spring.profiles.active=redis
+      --spring.data.redis.password=$${REDIS_PASSWORD:redis_pwd}
     ports:
       - "8090:8090"
     depends_on:
