@@ -1,6 +1,6 @@
 package io.akikr.app.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,15 +15,19 @@ import java.time.Duration;
 
 @Configuration
 @EnableCaching
+@EnableConfigurationProperties(AppRedisProperties.class)
 public class RedisConfig {
 
-    @Value("${app.redis-cache.ttl.default-value:10}")
-    private long defaultTtl;
+    private final AppRedisProperties appRedisProperties;
+
+    public RedisConfig(AppRedisProperties appRedisProperties) {
+        this.appRedisProperties = appRedisProperties;
+    }
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
         RedisCacheConfiguration cacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(defaultTtl))
+                .entryTtl(Duration.ofMinutes(appRedisProperties.defaultTtlValue()))
                 .disableCachingNullValues()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new GenericJackson2JsonRedisSerializer()));
