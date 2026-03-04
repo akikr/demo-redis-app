@@ -12,7 +12,6 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers
 public class RedisTestContainer {
 
-
     @Container
     @ServiceConnection
     public static final RedisContainer REDIS = new RedisContainer(DockerImageName.parse("redis:7.4.2"))
