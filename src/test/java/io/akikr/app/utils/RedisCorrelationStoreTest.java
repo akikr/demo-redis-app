@@ -46,7 +46,7 @@ class RedisCorrelationStoreTest {
     }
 
     @Test
-    @DisplayName("Push 1 response for the given key successfully")
+    @DisplayName("Push one response for the given key successfully")
     void pushResponse_successfully() {
         // Arrange & Act
         redisCorrelationStore.pushResponse(defaultCorrelationId, defaultPayload);
@@ -60,7 +60,7 @@ class RedisCorrelationStoreTest {
     }
 
     @Test
-    @DisplayName("Wait for response for the given key:1001 is successfully")
+    @DisplayName("Wait for one response for the given key is successfully")
     void waitForResponse_isSuccessfully() {
         // Arrange
         stringRedisTemplate.opsForList().rightPush(defaultCorrelationId, defaultPayload);
