@@ -37,7 +37,7 @@ public class FakeDataService {
     }
 
     public User searchUser(String correlationId) {
-        log.info("Fetching user from fake data service fro correlationId:[{}]", correlationId);
+        log.info("Fetching user from fake data service for correlationId:[{}]", correlationId);
         try {
             String userData = redisCorrelationStore.waitForResponse(correlationId);
             if(userData != null) {
@@ -48,6 +48,7 @@ public class FakeDataService {
         } catch (Exception e) {
             log.error("Error while fetching user from fake data service, due to: {}", e.getMessage(), e);
         }
+        log.warn("Timeout fetching user from fake data service for correlationId:[{}]", correlationId);
         return null;
     }
 
