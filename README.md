@@ -1,84 +1,122 @@
 # A demo-redis-app
 
-This project provides a simple example of how to use Redis as cache-service in a Spring Boot application.  
+This project is a Spring Boot application demonstrating Redis-backed caching and correlation-store patterns.
 
 ## Project Requirements
 
-To build and run this project, you'll need the following:
+To build and run this project, you'll need:
 
-*   Java 25 or later
-*   Maven 3.9.11 or later
-*   Docker and Docker Compose (The application uses Docker to run a Redis service, so you'll need to
-    have Docker installed and running)
+- Java 25 or later
+- Maven 3.9.11 or later
+- Docker + Docker Compose
 
 ## Dependencies
 
-The project relies on a few key dependencies to function:
+Main dependencies:
 
-*   **Spring Boot**: The core framework for building the application.
-*   **Spring Data Redis**: For easy integration with the Redis database.
-*   **Spring Web**: To create the RESTful API.
-*   **Testcontainers**: For running integration tests with a docker container.
+- **Spring Boot**
+- **Spring Data Redis**
+- **Spring Web**
+- **Testcontainers** (integration tests)
 
-For a complete list of dependencies, please see the `pom.xml` file.
+For complete details, see [`pom.xml`](pom.xml).
 
-## Getting Started
+## Environment Setup
 
-To get started with the project, you'll need to have the project on your local machine.
-
-### Environment Setup
-
-* The project uses SDKMAN for managing Java and Maven versions.
-* Initialize your development environment using **SDKMAN** CLI and sdkman env file [`sdkmanrc`](.sdkmanrc)
+- The project uses SDKMAN for Java/Maven version management.
+- Initialize the local toolchain using [`.sdkmanrc`](.sdkmanrc):
 
 ```shell
 sdk env install
 sdk env
 ```
+
 #### Note: To install SDKMAN refer: [sdkman.io](https://sdkman.io/install)
 
----
+## Development Run
 
-### How to run the application
-
-The application can be run in a few different ways, depending on your preference.
-
-### Running with Maven
-
-The simplest way to run the application is to use the Maven wrapper script included in the project.
+Run with Maven:
 
 ```shell
 sdk env
 ./mvnw spring-boot:run
 ```
 
-This will start the application and the Redis database in docker container using Spring Boot's built-in support for Docker Compose.
+By default, development mode uses `compose.yml` through Spring Boot Docker Compose integration.
 
-### Running with Docker
+## Prod Profile (Redis Sentinel)
 
-The project also includes a `compose.yml` to be used by spring-boot docker-compose support to run the application and the Redis service in Docker containers.
+This repository now includes production Redis Sentinel topology and app profile files:
 
-### Testing the application
+- [`compose-prod.yml`](compose-prod.yml): Redis master + 2 replicas + 3 Sentinel nodes
+- [`src/main/resources/application-prod.properties`](src/main/resources/application-prod.properties): Spring Redis Sentinel configuration
 
-### Run the tests using Maven
+### Sentinel topology summary
 
-To run the tests for the application, you can use the following Maven command:
+- `redis-master` (primary)
+- `redis-replica-1`, `redis-replica-2` (replicas)
+- `redis-sentinel-1`, `redis-sentinel-2`, `redis-sentinel-3` (quorum-based failover)
+- Sentinel master name: `mymaster`
+
+### Required environment variables
+
+At minimum, set:
+
+```shell
+export REDIS_PASSWORD='change_me'
+```
+
+Optional overrides:
+
+```shell
+export REDIS_SENTINEL_MASTER='mymaster'
+export REDIS_SENTINEL_NODES='redis-sentinel-1:26379,redis-sentinel-2:26379,redis-sentinel-3:26379'
+export APP_REDIS_DEFAULT_TTL_VALUE='30'
+export APP_REDIS_CORRELATION_TTL_VALUE='3000'
+```
+
+## How To Run In Production Setup
+
+### 1. Start Redis + Sentinel stack
+
+```shell
+REDIS_PASSWORD='change_me' docker compose -f compose-prod.yml up -d
+```
+
+### 2. Run app as container (recommended with this topology)
+
+Build image:
+
+```shell
+./mvnw clean package spring-boot:build-image-no-fork -DskipTests
+```
+
+Start app profile from compose:
+
+```shell
+REDIS_PASSWORD='change_me' docker compose -f compose-prod.yml --profile app up -d
+```
+
+### 3. Basic health checks
+
+```shell
+docker compose -f compose-prod.yml ps
+docker compose -f compose-prod.yml logs redis-sentinel-1 --tail=50
+curl -s http://localhost:8090/app/actuator/health | jq
+```
+
+## Testing
+
+Run unit + integration tests:
 
 ```shell
 sdk env
 ./mvnw clean test
 ```
 
-This will execute all the `unit-tests` and `integration-tests` for the application using `test-containers` to spin up a Redis service in a docker container for testing purposes.
-
-## Conclusion
-
-The `demo-redis-app` project is a great starting point for anyone looking to learn how to build a simple Spring Boot application with Redis as cache-service.
-
 ## Contributing
 
-Explore the code, run the application, and experiment with the API.  Feel free to contribute to this project!
-
-For questions or issues, please open a GitHub issue or submit a pull request.
+Explore the code, run the application, and experiment with the API.  
+For questions or issues, open a GitHub issue or submit a pull request.
 
 Happy coding! ✌️
