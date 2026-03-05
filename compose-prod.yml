@@ -22,8 +22,6 @@ services:
       timeout: 3s
       retries: 10
     restart: unless-stopped
-    networks:
-      - redis-net
 
   redis-replica-1:
     image: redis:8-alpine
@@ -52,8 +50,7 @@ services:
       timeout: 3s
       retries: 10
     restart: unless-stopped
-    networks:
-      - redis-net
+
 
   redis-replica-2:
     image: redis:8-alpine
@@ -82,8 +79,6 @@ services:
       timeout: 3s
       retries: 10
     restart: unless-stopped
-    networks:
-      - redis-net
 
   redis-sentinel-1:
     image: redis:8-alpine
@@ -119,8 +114,7 @@ services:
       timeout: 3s
       retries: 10
     restart: unless-stopped
-    networks:
-      - redis-net
+
 
   redis-sentinel-2:
     image: redis:8-alpine
@@ -156,8 +150,6 @@ services:
       timeout: 3s
       retries: 10
     restart: unless-stopped
-    networks:
-      - redis-net
 
   redis-sentinel-3:
     image: redis:8-alpine
@@ -193,24 +185,23 @@ services:
       timeout: 3s
       retries: 10
     restart: unless-stopped
-    networks:
-      - redis-net
 
   demo-app:
     image: app/redis-app-sb:v1
+    container_name: demo-app
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
       REDIS_SENTINEL_NODES: redis-sentinel-1:26379,redis-sentinel-2:26379,redis-sentinel-3:26379
       JAVA_TOOL_OPTIONS: -Xmx300m
-    command: >-
-      --spring.profiles.active=prod
-      --app.redis-cache.default-ttl-value=10000
-      --app.redis-cache.correlation-store-ttl-value=20000
+    command:
+      - --spring.profiles.active=prod
+      - --app.redis-cache.default-ttl-value=10000
+      - --app.redis-cache.correlation-store-ttl-value=20000
       # This timeout value must be greater that TTL values (default-ttl-value OR correlation-store-ttl-value)
-      --spring.data.redis.timeout=30s
-      --spring.data.redis.password=$${REDIS_PASSWORD}
-      --spring.data.redis.sentinel.master=mymaster
-      --spring.data.redis.sentinel.nodes=$${REDIS_SENTINEL_NODES}
+      - --spring.data.redis.timeout=30s
+      - --spring.data.redis.password=$${REDIS_PASSWORD}
+      - --spring.data.redis.sentinel.master=mymaster
+      - --spring.data.redis.sentinel.nodes=$${REDIS_SENTINEL_NODES}
     depends_on:
       redis-sentinel-1:
         condition: service_healthy
@@ -226,14 +217,8 @@ services:
       timeout: 5s
       retries: 3
     restart: unless-stopped
-    networks:
-      - redis-net
 
 volumes:
   redis_master_data:
   redis_replica_1_data:
   redis_replica_2_data:
-
-networks:
-  redis-net:
-    name: redis-prod-net
