@@ -187,6 +187,7 @@ services:
     restart: unless-stopped
 
   demo-app:
+    ##To build this image:  ./mvnw clean package spring-boot:build-image-no-fork -DskipTests -Dspring-boot.build-image.env.BP_BASE_IMAGE="paketobuildpacks/builder-noble-java-tiny:latest" -Dspring-boot.build-image.env.BP_NATIVE_IMAGE_BUILD_ARGUMENTS="-H:Architecture=linux/amd64"
     image: app/redis-app-sb:v1
     container_name: demo-app
     environment:

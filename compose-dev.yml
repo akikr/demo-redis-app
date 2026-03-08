@@ -19,17 +19,29 @@ services:
       - .env
 
   demo-app:
-    ##To build this image:  ./mvnw clean package spring-boot:build-image-no-fork -DskipTests -Dspring-boot.build-image.env.BP_BASE_IMAGE="paketobuildpacks/builder-noble-java-tiny:latest" -Dspring-boot.build-image.env.BP_NATIVE_IMAGE_BUILD_ARGUMENTS="-H:Architecture=linux/amd64"
-    image: app/redis-app-sb:v1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: redis-app-sb:v1
     environment:
-      - "REDIS_HOST=${REDIS_HOST}"
-      - "REDIS_PORT=${REDIS_PORT}"
-      - "REDIS_PASSWORD=${REDIS_PASSWORD}"
-      - "JAVA_TOOL_OPTIONS=-Xmx300m"
-    command: >-
-      --spring.docker.compose.enabled=false
-      --spring.profiles.active=redis
-      --spring.data.redis.password=$${REDIS_PASSWORD:redis_pwd}
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      JAVA_OPTS: |-
+        -Xmx200m
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/var/dumps
+        -XX:MaxRAMPercentage=50
+        -Xss256k
+        -XX:ReservedCodeCacheSize=64m
+        -XX:MaxMetaspaceSize=96m
+        -XX:+UseStringDeduplication
+        --enable-native-access=ALL-UNNAMED
+      APP_ARGS: |-
+        --spring.docker.compose.enabled=false
+        --spring.profiles.active=redis
+        --spring.data.redis.password=$${REDIS_PASSWORD}
     ports:
       - "8090:8090"
     healthcheck:
@@ -40,6 +52,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    volumes:
+      - /tmp/app/dumps:/var/dumps:rw
     env_file:
       - .env
 
